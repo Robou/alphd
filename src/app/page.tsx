@@ -18,10 +18,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-// import dynamic from 'next/dynamic'
+import dynamic from 'next/dynamic'
 
 // // Import dynamique du composant 3D pour éviter les problèmes SSR
-// const ThreeScene = dynamic(() => import('@/components/three/ThreeScene'))
+const ThreeScene = dynamic(() => import('@/components/three/ThreeScene'))
+
 
 interface Model {
   name: string
@@ -145,7 +146,7 @@ export default function HomePage() {
         </div>
 
         {/* Zone de visualisation 3D */}
-        {/* <div className="lg:col-span-3">
+        <div className="lg:col-span-3">
           <div className="card h-[600px]">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Visualiseur 3D</h2>
@@ -172,7 +173,7 @@ export default function HomePage() {
               )}
             </div>
           </div>
-        </div> */}
+        </div>
       </div>
     </div>
   )
