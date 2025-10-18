@@ -1,17 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { S3Client, ListObjectsV2Command } from '@aws-sdk/client-s3'
+import amplifyOutputs from '../../../../amplify_outputs.json'
 
-// Configuration Amplify - utiliser les sorties générées automatiquement
-const amplifyOutputs = {
-  "storage": {
-    "aws_region": "eu-west-3",
-    "bucket_name": "amplify-d17uxdu2napxpc-ma-amplifyalphdmeshesbucket-4rknaslwb6z4"
-  }
-}
-
-// Configuration S3 avec les valeurs d'Amplify
+// Configuration S3 avec les vraies informations d'Amplify
 const s3Client = new S3Client({
-  region: amplifyOutputs.storage.aws_region
+  region: amplifyOutputs.storage.aws_region,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
+  }
 })
 
 const BUCKET_NAME = amplifyOutputs.storage.bucket_name
@@ -23,6 +20,7 @@ export async function GET(_request: NextRequest) {
     console.log('=== API Route - Configuration Amplify ===')
     console.log('Région AWS:', amplifyOutputs.storage.aws_region)
     console.log('Bucket S3:', BUCKET_NAME)
+    console.log('Configuration chargée depuis amplify_outputs.json')
 
     // Lister les objets dans le bucket S3
     const command = new ListObjectsV2Command({
@@ -67,7 +65,7 @@ export async function GET(_request: NextRequest) {
         return isPly
       })
       .map((object) => {
-        // Construire l'URL publique S3
+        // Construire l'URL publique S3 avec la vraie configuration
         const url = `https://${BUCKET_NAME}.s3.${amplifyOutputs.storage.aws_region}.amazonaws.com/${object.Key}`
         console.log('URL générée:', url)
         return url
