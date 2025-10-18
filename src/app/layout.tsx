@@ -16,21 +16,6 @@ export const metadata: Metadata = {
     "Application de visualisation de données LiDAR haute définition pour l'analyse de terrains montagneux",
 };
 
-/* export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
-      </body>
-    </html>
-  );
-} */
 
 export default function RootLayout({
   children,

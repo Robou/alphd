@@ -28,7 +28,7 @@ export async function GET(_request: NextRequest) {
 
     // Filtrer et formater les URLs des fichiers .nxz
     const modelUrls = response.Contents
-      .filter((object) => object.Key?.endsWith('.nxz'))
+      .filter((object) => object.Key?.endsWith('.final.ply'))
       .map((object) => {
         // Construire l'URL publique S3
         return `https://${BUCKET_NAME}.s3.${process.env.AWS_REGION || 'eu-west-3'}.amazonaws.com/${object.Key}`

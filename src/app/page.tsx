@@ -1,20 +1,3 @@
-// 'use client'
-
-// import { Canvas } from "@react-three/fiber";
-
-// export default function App() {
-// return (
-//     <Canvas>
-//       <mesh>
-//         <sphereGeometry args={[3, 30, 30]} />
-//         <meshNormalMaterial />
-//       </mesh>
-//       <ambientLight intensity={0.1} />
-//       <directionalLight position={[0, 0, 5]} color="red" />
-//     </Canvas>
-// );
-// }
-
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -32,7 +15,7 @@ interface Model {
 
 export default function HomePage() {
   const [models, setModels] = useState<Model[]>([])
-  const [selectedModel, setSelectedModel] = useState<string>('')
+  const [selectedModels, setSelectedModels] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string>('')
 
@@ -45,7 +28,7 @@ export default function HomePage() {
 
       const modelUrls = await response.json()
       const modelList: Model[] = modelUrls.map((url: string) => ({
-        name: url.split('/').pop()?.replace('.nxz', '') || 'Modèle',
+        name: url.split('/').pop()?.replace('.final.ply', '') || 'Modèle',
         url,
         coordinates: extractCoordinates(url)
       }))
@@ -101,7 +84,7 @@ export default function HomePage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Panneau de contrôle */}
         <div className="lg:col-span-1">
           <div className="card sticky top-8">
@@ -110,28 +93,49 @@ export default function HomePage() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Sélectionner un modèle
+                  Sélectionner les modèles à afficher
                 </label>
-                <select
-                  value={selectedModel}
-                  onChange={(e) => setSelectedModel(e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="">Choisir un modèle...</option>
+                <div className="space-y-2 max-h-96 overflow-y-auto">
                   {models.map((model) => (
-                    <option key={model.url} value={model.url}>
-                      {model.name}
-                      {model.coordinates && ` (${model.coordinates.x}, ${model.coordinates.y})`}
-                    </option>
+                    <label key={model.url} className="flex items-center space-x-2 p-2 rounded hover:bg-gray-50">
+                      <input
+                        type="checkbox"
+                        checked={selectedModels.includes(model.url)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedModels(prev => [...prev, model.url]);
+                          } else {
+                            setSelectedModels(prev => prev.filter(url => url !== model.url));
+                          }
+                        }}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <div className="flex-1">
+                        <div className="font-medium text-sm">{model.name}</div>
+                        {model.coordinates && (
+                          <div className="text-xs text-gray-500">
+                            Coordonnées: ({model.coordinates.x}, {model.coordinates.y})
+                          </div>
+                        )}
+                      </div>
+                    </label>
                   ))}
-                </select>
+                </div>
               </div>
 
-              {selectedModel && (
+              {selectedModels.length > 0 && (
                 <div className="pt-4 border-t">
-                  <button className="btn-primary w-full">
-                    Charger le modèle
-                  </button>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium">
+                      {selectedModels.length} modèle{selectedModels.length > 1 ? 's' : ''} sélectionné{selectedModels.length > 1 ? 's' : ''}
+                    </span>
+                    <button
+                      onClick={() => setSelectedModels([])}
+                      className="text-xs text-red-600 hover:text-red-800"
+                    >
+                      Tout désélectionner
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -146,8 +150,8 @@ export default function HomePage() {
         </div>
 
         {/* Zone de visualisation 3D */}
-        <div className="lg:col-span-3">
-          <div className="card h-[600px]">
+        <div className="lg:col-span-4">
+          <div className="card h-[700px]">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Visualiseur 3D</h2>
               <div className="flex space-x-2">
@@ -160,14 +164,18 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div id="threejs-container" className="w-full h-[500px] bg-black rounded-lg overflow-hidden">
-              {selectedModel ? (
-                <ThreeScene modelUrl={selectedModel} />
+            <div id="threejs-container" className="w-full h-[600px] bg-gray-50 rounded-lg overflow-hidden">
+              {selectedModels.length > 0 ? (
+                <ThreeScene models={models} selectedModels={selectedModels} />
               ) : (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center">
-                    <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto"></div>
-                    <p className="mt-4 text-gray-400">Sélectionnez un modèle pour commencer</p>
+                    <div className="animate-pulse text-gray-400 mb-4">
+                      <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                      </svg>
+                    </div>
+                    <p className="text-gray-400">Sélectionnez des modèles pour commencer la visualisation</p>
                   </div>
                 </div>
               )}
