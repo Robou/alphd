@@ -22,7 +22,7 @@ export default function ThreeScene({ models, selectedModels }: ThreeSceneProps) 
   return (
     <>
       <div className="relative w-full h-full">
-        <Canvas camera={{ position: [0, 1, 1], fov: 75 }}>
+        <Canvas camera={{ position: [0, 3, 3], fov: 75}}>
 
           <OrbitControls
             enablePan={true}
