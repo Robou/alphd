@@ -1,41 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { S3Client, ListObjectsV2Command } from '@aws-sdk/client-s3'
 
+// Configuration Amplify - utiliser les sorties générées automatiquement
+const amplifyOutputs = {
+  "storage": {
+    "aws_region": "eu-west-3",
+    "bucket_name": "amplify-d17uxdu2napxpc-ma-amplifyalphdmeshesbucket-4rknaslwb6z4"
+  }
+}
 
-
-// Configuration S3
+// Configuration S3 avec les valeurs d'Amplify
 const s3Client = new S3Client({
-  region: process.env.AWS_REGION || 'eu-west-3'
+  region: amplifyOutputs.storage.aws_region
 })
 
-const BUCKET_NAME = process.env.MODELS_BUCKET || 'amplify-d17uxdu2napxpc-ma-amplifyalphdmeshesbucket-4rknaslwb6z4'
+const BUCKET_NAME = amplifyOutputs.storage.bucket_name
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function GET(_request: NextRequest) {
   try {
     // Logs de diagnostic pour Amplify
-    console.log('=== API Route - Diagnostic Info ===')
-    console.log('AWS_REGION:', process.env.AWS_REGION)
-    console.log('MODELS_BUCKET:', process.env.MODELS_BUCKET)
-    console.log('NODE_ENV:', process.env.NODE_ENV)
-    console.log('BUCKET_NAME:', BUCKET_NAME)
-
-    // Vérifier les variables d'environnement critiques
-    if (!process.env.AWS_REGION) {
-      console.error('AWS_REGION manquant')
-      return NextResponse.json(
-        { error: 'Configuration AWS_REGION manquante' },
-        { status: 500 }
-      )
-    }
-
-    if (!process.env.MODELS_BUCKET) {
-      console.error('MODELS_BUCKET manquant')
-      return NextResponse.json(
-        { error: 'Configuration MODELS_BUCKET manquante' },
-        { status: 500 }
-      )
-    }
+    console.log('=== API Route - Configuration Amplify ===')
+    console.log('Région AWS:', amplifyOutputs.storage.aws_region)
+    console.log('Bucket S3:', BUCKET_NAME)
 
     // Lister les objets dans le bucket S3
     const command = new ListObjectsV2Command({
@@ -81,7 +68,7 @@ export async function GET(_request: NextRequest) {
       })
       .map((object) => {
         // Construire l'URL publique S3
-        const url = `https://${BUCKET_NAME}.s3.${process.env.AWS_REGION || 'eu-west-3'}.amazonaws.com/${object.Key}`
+        const url = `https://${BUCKET_NAME}.s3.${amplifyOutputs.storage.aws_region}.amazonaws.com/${object.Key}`
         console.log('URL générée:', url)
         return url
       })
