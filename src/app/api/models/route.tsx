@@ -4,13 +4,13 @@ import amplifyOutputs from '../../../../amplify_outputs.json'
 
 // Configuration S3 adaptée selon l'environnement
 const createS3Client = () => {
-  // En développement local, utiliser le profil AWS par défaut
-  if (process.env.NODE_ENV === 'development') {
-    return new S3Client({
-      region: amplifyOutputs.storage.aws_region,
-      // Utilise les credentials du profil AWS local
-    })
-  }
+  // // En développement local, utiliser le profil AWS par défaut
+  // if (process.env.NODE_ENV === 'development') {
+  //   return new S3Client({
+  //     region: amplifyOutputs.storage.aws_region,
+  //     // Utilise les credentials du profil AWS local
+  //   })
+  // }
 
   // En production (Amplify), utiliser les credentials automatiques du rôle IAM
   // Amplify fournit automatiquement les credentials via les variables d'environnement du rôle IAM

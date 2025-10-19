@@ -23,12 +23,36 @@ export default function App() {
   ]
 
   return (
-    <Canvas camera={{ position: [0, 0, 3] }}>
-      <Polyhedron position={[-0.75, -0.75, 0]} polyhedron={polyhedron} />
-      <Polyhedron position={[0.75, -0.75, 0]} polyhedron={polyhedron} />
-      <Polyhedron position={[-0.75, 0.75, 0]} polyhedron={polyhedron} />
-      <Polyhedron position={[0.75, 0.75, 0]} polyhedron={polyhedron} />
-      <OrbitControls />
-    </Canvas>
+    <div className="relative w-full h-screen overflow-hidden">
+      {/* Image d'arrière-plan avec fondu vers le haut
+      <div
+        className="absolute inset-0 bg-cover bg-bottom bg-no-repeat bg-gradient-to-l from-transparent to-gray-50"
+        style={{
+          backgroundImage: `linear-gradient(to top, rgb(249 250 251), transparent 60%), url('https://raw.githubusercontent.com/Robou/LidarHD/main/images/FontSancte/332_3.jpg')`
+        }}
+      /> */}
+
+      {/* Image en bandeau vertical à droite avec fondu vers la transparence */}
+      <div className="absolute bottom-0 center w-full w-96 z-0">
+        <div className="relative  w-full">
+          <img
+            src="https://raw.githubusercontent.com/Robou/LidarHD/main/images/FontSancte/332_3.jpg"
+            alt="Montagne 3D reconstruite en haute définition"
+            className="h-full w-full object-cover"
+          />
+          {/* Fondu vers la transparence de droite à gauche */}
+          <div className="absolute inset-0 bg-gradient-to-t from-transparent to-gray-50"></div>
+        </div>
+      </div>
+
+      {/* Canvas Three.js par-dessus l'image */}
+      <Canvas camera={{ position: [0, 0, 3] }} className="relative z-10">
+        <Polyhedron position={[-0.75, -0.75, 0]} polyhedron={polyhedron} />
+        <Polyhedron position={[0.75, -0.75, 0]} polyhedron={polyhedron} />
+        <Polyhedron position={[-0.75, 0.75, 0]} polyhedron={polyhedron} />
+        <Polyhedron position={[0.75, 0.75, 0]} polyhedron={polyhedron} />
+        <OrbitControls />
+      </Canvas>
+    </div>
   )
 }
