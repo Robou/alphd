@@ -12,13 +12,11 @@ const createS3Client = () => {
     })
   }
 
-  // En production (Amplify), utiliser les credentials fournies
+  // En production (Amplify), utiliser les credentials automatiques du rôle IAM
+  // Amplify fournit automatiquement les credentials via les variables d'environnement du rôle IAM
   return new S3Client({
     region: amplifyOutputs.storage.aws_region,
-    credentials: {
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
-    }
+    // Les credentials sont automatiquement disponibles via le rôle IAM d'Amplify
   })
 }
 
@@ -38,6 +36,8 @@ export async function GET(_request: NextRequest) {
     if (process.env.NODE_ENV === 'development') {
       console.log('💡 Mode développement: Assurez-vous d\'avoir configuré vos credentials AWS localement')
       console.log('   Utilisez: aws configure ou définissez AWS_PROFILE')
+    } else {
+      console.log('🚀 Mode production: Utilisation du rôle IAM Amplify')
     }
 
     // Lister les objets dans le bucket S3
