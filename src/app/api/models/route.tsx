@@ -2,15 +2,27 @@ import { NextRequest, NextResponse } from 'next/server'
 import { S3Client, ListObjectsV2Command } from '@aws-sdk/client-s3'
 import amplifyOutputs from '../../../../amplify_outputs.json'
 
-// Configuration S3 avec les vraies informations d'Amplify
-const s3Client = new S3Client({
-  region: amplifyOutputs.storage.aws_region,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
+// Configuration S3 adaptée selon l'environnement
+const createS3Client = () => {
+  // En développement local, utiliser le profil AWS par défaut
+  if (process.env.NODE_ENV === 'development') {
+    return new S3Client({
+      region: amplifyOutputs.storage.aws_region,
+      // Utilise les credentials du profil AWS local
+    })
   }
-})
 
+  // En production (Amplify), utiliser les credentials fournies
+  return new S3Client({
+    region: amplifyOutputs.storage.aws_region,
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
+    }
+  })
+}
+
+const s3Client = createS3Client()
 const BUCKET_NAME = amplifyOutputs.storage.bucket_name
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -18,9 +30,15 @@ export async function GET(_request: NextRequest) {
   try {
     // Logs de diagnostic pour Amplify
     console.log('=== API Route - Configuration Amplify ===')
+    console.log('Environnement:', process.env.NODE_ENV || 'production')
     console.log('Région AWS:', amplifyOutputs.storage.aws_region)
     console.log('Bucket S3:', BUCKET_NAME)
     console.log('Configuration chargée depuis amplify_outputs.json')
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('💡 Mode développement: Assurez-vous d\'avoir configuré vos credentials AWS localement')
+      console.log('   Utilisez: aws configure ou définissez AWS_PROFILE')
+    }
 
     // Lister les objets dans le bucket S3
     const command = new ListObjectsV2Command({
