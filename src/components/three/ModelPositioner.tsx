@@ -68,7 +68,7 @@ function calculateRelativePositions(models: Model[]): (Model & { position: [numb
       const relativeX = (baseX - model.coordinates.x) * 1; // Échelle 1:1, inversé
       const relativeZ = (baseY - model.coordinates.y) * 1; // Z pour la profondeur, inversé
 
-      position = [relativeX, 0, relativeZ];
+      position = [-relativeX, 0, relativeZ];
     }
     // Si pas de coordonnées, le modèle reste au centre
 

@@ -86,8 +86,8 @@ export default function PLYMeshLoader({ url }: MeshLoaderProps) {
         <meshStandardMaterial
           color="#4a90e2"
           side={THREE.DoubleSide}
-          roughness={0.8}
-          metalness={0.1}
+          roughness={0.5}
+          metalness={0.5}
         />
       </mesh>
 

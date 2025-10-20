@@ -41,7 +41,7 @@ function SceneContent({ models, selectedModels }: ThreeSceneProps) {
 
       <gridHelper args={[10, 10]} />
       <axesHelper args={[2]} />
-      <Stats />
+      {/* <Stats /> */}
 
       {/* Éclairage adapté aux unités normales */}
       <ambientLight intensity={1.3} />
@@ -83,7 +83,7 @@ export default function ThreeScene({ models, selectedModels }: ThreeSceneProps) 
 
         {/* Interface utilisateur overlay */}
         <SceneUI models={models} selectedModels={selectedModels} />
-        <MyLevaUI />
+        {/* <MyLevaUI /> */}
       </div>
     </>
   );

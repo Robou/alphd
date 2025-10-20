@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { Vector3, Box3 } from "three";
 import { useControls } from 'leva'
+import { FaChevronDown, FaChevronUp, FaInfo } from "react-icons/fa";
 
 
 
@@ -35,6 +36,8 @@ function UnmountedComponent() {
 }
 
 export default function SceneUI({ models, selectedModels }: SceneUIProps) {
+  const [isVisible, setIsVisible] = useState(false);
+
   const sceneInfo = useMemo(() => {
     if (selectedModels.length === 0) {
       return {
@@ -77,81 +80,90 @@ export default function SceneUI({ models, selectedModels }: SceneUIProps) {
   }, [models, selectedModels]);
 
   return (
-    <div className="absolute top-4 left-4 z-10 space-y-3">
-      {/* Informations principales */}
-      <div className="bg-white/95 backdrop-blur-sm rounded-lg p-4 shadow-lg border min-w-[280px]">
-        <h3 className="text-sm font-semibold text-gray-800 mb-3 flex items-center">
-          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-          </svg>
-          Informations de la scène
-        </h3>
+    <div className="absolute top-4 left-4 z-10">
+      {/* Bouton de toggle dans le coin supérieur gauche */}
+      <button
+        onClick={() => setIsVisible(!isVisible)}
+        className="absolute -top-2 -left-2 w-8 h-4 bg-white/90 backdrop-blur-sm rounded-full shadow-lg border flex items-center justify-center hover:bg-white/95 transition-all duration-200 z-20"
+        title={isVisible ? "Masquer les informations" : "Afficher les informations"}
+      >
+        {isVisible ? (
+          <FaChevronUp className="w-4 h-4 text-gray-600" />
+        ) : (
+          <FaChevronDown className="w-4 h-4 text-gray-600" />
+        )}
+      </button>
 
-        <div className="space-y-3">
-          {/* Compteur de modèles */}
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600">Modèles sélectionnés:</span>
-            <span className="text-lg font-bold text-blue-600">{sceneInfo.modelCount}</span>
+      {/* Contenu de l'overlay - visible seulement si isVisible est true */}
+      {isVisible && (
+        <div className="space-y-2 absolute top-4">
+          {/* Informations principales - plus compact */}
+          <div className="bg-white/95 backdrop-blur-sm rounded-lg p-3 shadow-lg border min-w-[240px]">
+            <h3 className="text-xs font-semibold text-gray-800 mb-2 flex items-center">
+              <FaInfo className="w-3 h-3 mr-1" />
+              Informations scène
+            </h3>
+
+            <div className="space-y-2">
+              {/* Compteur de modèles */}
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-gray-600">Modèles:</span>
+                <span className="text-sm font-bold text-blue-600">{sceneInfo.modelCount}</span>
+              </div>
+
+              {/* Bounding Box Info - plus compact */}
+              {sceneInfo.boundingBox && (
+                <>
+                  <div className="border-t pt-2">
+                    <div className="text-xs text-gray-500 mb-1">Dimensions:</div>
+                    <div className="grid grid-cols-3 gap-1">
+                      <div className="text-center p-1 bg-gray-50 rounded text-xs">
+                        <div className="text-gray-500">L</div>
+                        <div className="font-mono text-xs font-medium">{sceneInfo.boundingBox.width}</div>
+                      </div>
+                      <div className="text-center p-1 bg-gray-50 rounded text-xs">
+                        <div className="text-gray-500">H</div>
+                        <div className="font-mono text-xs font-medium">{sceneInfo.boundingBox.height}</div>
+                      </div>
+                      <div className="text-center p-1 bg-gray-50 rounded text-xs">
+                        <div className="text-gray-500">P</div>
+                        <div className="font-mono text-xs font-medium">{sceneInfo.boundingBox.depth}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border-t pt-2">
+                    <div className="text-xs text-gray-500 mb-1">Centre:</div>
+                    <div className="font-mono text-xs bg-gray-50 p-2 rounded">
+                      {sceneInfo.boundingBox.center.x}, {sceneInfo.boundingBox.center.y}, {sceneInfo.boundingBox.center.z}
+                    </div>
+                  </div>
+
+                  <div className="border-t pt-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-gray-500">Surface:</span>
+                      <span className="font-mono text-xs font-medium">{sceneInfo.totalArea} u²</span>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
 
-          {/* Bounding Box Info */}
-          {sceneInfo.boundingBox && (
-            <>
-              <div className="border-t pt-3">
-                <div className="text-xs text-gray-500 mb-2">Dimensions (unités):</div>
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="text-center p-2 bg-gray-50 rounded text-xs">
-                    <div className="text-gray-500">Largeur</div>
-                    <div className="font-mono font-medium">{sceneInfo.boundingBox.width}</div>
-                  </div>
-                  <div className="text-center p-2 bg-gray-50 rounded text-xs">
-                    <div className="text-gray-500">Hauteur</div>
-                    <div className="font-mono font-medium">{sceneInfo.boundingBox.height}</div>
-                  </div>
-                  <div className="text-center p-2 bg-gray-50 rounded text-xs">
-                    <div className="text-gray-500">Profondeur</div>
-                    <div className="font-mono font-medium">{sceneInfo.boundingBox.depth}</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="border-t pt-3">
-                <div className="text-xs text-gray-500 mb-2">Centre (x, y, z):</div>
-                <div className="font-mono text-xs bg-gray-50 p-3 rounded">
-                  {sceneInfo.boundingBox.center.x}, {sceneInfo.boundingBox.center.y}, {sceneInfo.boundingBox.center.z}
-                </div>
-              </div>
-
-              <div className="border-t pt-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-500">Surface totale:</span>
-                  <span className="font-mono text-sm font-medium">{sceneInfo.totalArea} unités²</span>
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* Espace réservé pour futures informations */}
-          <div className="border-t pt-3">
-            <div className="text-xs text-gray-400 italic">
-              Espace réservé pour d'autres informations...
+          {/* Panneau de contrôles rapide - plus compact */}
+          <div className="bg-white/90 backdrop-blur-sm rounded-lg p-2 shadow-lg border">
+            <h4 className="text-xs font-semibold text-gray-700 mb-1">Actions</h4>
+            <div className="space-y-1">
+              <button className="w-full text-xs px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded transition-colors">
+                Centrer
+              </button>
+              <button className="w-full text-xs px-2 py-1 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded transition-colors">
+                Vue dessus
+              </button>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Panneau de contrôles rapide */}
-      <div className="bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-lg border">
-        <h4 className="text-xs font-semibold text-gray-700 mb-2">Contrôles rapides</h4>
-        <div className="space-y-1">
-          <button className="w-full text-xs px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded transition-colors">
-            Centrer la vue
-          </button>
-          <button className="w-full text-xs px-2 py-1 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded transition-colors">
-            Vue de dessus
-          </button>
-        </div>
-      </div>
+      )}
     </div>
   );
 }
