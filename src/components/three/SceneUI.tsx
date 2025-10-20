@@ -3,7 +3,8 @@
 import React, { useMemo, useState } from "react";
 import { Vector3, Box3 } from "three";
 import { useControls } from 'leva'
-import { FaChevronDown, FaChevronUp, FaInfo } from "react-icons/fa";
+import { FaChevronDown, FaChevronUp, FaInfo, FaDatabase } from "react-icons/fa";
+import { geometryCache } from "./GeometryCache";
 
 
 
@@ -37,6 +38,11 @@ function UnmountedComponent() {
 
 export default function SceneUI({ models, selectedModels }: SceneUIProps) {
   const [isVisible, setIsVisible] = useState(false);
+
+  // Statistiques du cache mises à jour en temps réel
+  const cacheStats = useMemo(() => {
+    return geometryCache.getStats();
+  }, [models, selectedModels]); // Se met à jour quand les modèles changent
 
   const sceneInfo = useMemo(() => {
     if (selectedModels.length === 0) {
@@ -160,6 +166,51 @@ export default function SceneUI({ models, selectedModels }: SceneUIProps) {
               <button className="w-full text-xs px-2 py-1 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded transition-colors">
                 Vue dessus
               </button>
+            </div>
+          </div>
+
+          {/* Statistiques du cache - nouveau panneau */}
+          <div className="bg-white/90 backdrop-blur-sm rounded-lg p-2 shadow-lg border">
+            <h4 className="text-xs font-semibold text-gray-700 mb-1 flex items-center">
+              <FaDatabase className="w-3 h-3 mr-1" />
+              Cache géométrie
+            </h4>
+            <div className="space-y-1">
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-gray-600">Modèles:</span>
+                <span className="text-xs font-medium">{cacheStats.totalEntries}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-gray-600">Taille:</span>
+                <span className="text-xs font-medium">
+                  {cacheStats.totalSize > 1024 * 1024
+                    ? `${Math.round(cacheStats.totalSize / (1024 * 1024))}MB`
+                    : `${Math.round(cacheStats.totalSize / 1024)}KB`
+                  }
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-gray-600">Taux de succès:</span>
+                <span className={`text-xs font-medium ${cacheStats.hitRate > 0.5 ? 'text-green-600' : 'text-orange-600'}`}>
+                  {Math.round(cacheStats.hitRate * 100)}%
+                </span>
+              </div>
+              <div className="flex gap-1 mt-1">
+                <button
+                  onClick={() => geometryCache.clear()}
+                  className="flex-1 text-xs px-2 py-1 bg-red-50 hover:bg-red-100 text-red-600 rounded transition-colors"
+                  title="Vider le cache"
+                >
+                  Vider cache
+                </button>
+                <button
+                  onClick={() => geometryCache.debugCache()}
+                  className="flex-1 text-xs px-2 py-1 bg-gray-50 hover:bg-gray-100 text-gray-600 rounded transition-colors"
+                  title="Déboguer le cache (console)"
+                >
+                  Debug
+                </button>
+              </div>
             </div>
           </div>
         </div>
