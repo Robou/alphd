@@ -73,20 +73,38 @@ export async function GET(_request: NextRequest) {
       return NextResponse.json([])
     }
 
-    // Filtrer et formater les URLs des fichiers .ply
+    // Debug: lister tous les objets trouvés
+    console.log('🔍 Tous les objets trouvés dans meshes/:')
+    response.Contents.forEach((object, index) => {
+      console.log(`${index + 1}. ${object.Key}`)
+    })
+
+    // Filtrer et formater les URLs des fichiers .ply et .drc
     const modelUrls = response.Contents
       .filter((object) => {
         const isPly = object.Key?.endsWith('.final.ply')
-        if (isPly) {
-          console.log('Fichier PLY trouvé:', object.Key)
+        const isDrc = object.Key?.endsWith('.drc')
+        
+        if (isPly || isDrc) {
+          console.log(`Fichier ${isPly ? 'PLY' : 'DRC'} trouvé:`, object.Key)
         }
-        return isPly
+        
+        return isPly || isDrc
       })
       .map((object) => {
+        // Déterminer le format du fichier
+        const isPly = object.Key?.endsWith('.final.ply')
+        const format = isPly ? 'ply' : 'drc'
+        
         // Construire l'URL publique S3 avec la vraie configuration
         const url = `https://${BUCKET_NAME}.s3.${amplifyOutputs.storage.aws_region}.amazonaws.com/${object.Key}`
-        console.log('URL générée:', url)
-        return url
+        console.log(`URL générée pour format ${format}:`, url)
+        
+        return {
+          url: url,
+          format: format,
+          key: object.Key
+        }
       })
       .filter(Boolean)
 

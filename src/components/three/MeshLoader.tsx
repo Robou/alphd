@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useLoader } from "@react-three/fiber";
 import { PLYLoader } from "three-stdlib";
+import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { BufferGeometry, Material, Mesh } from "three";
 import * as THREE from "three";
 import BoundingBoxHelper from "./BoundingBoxHelper";
@@ -10,9 +11,10 @@ import { geometryCache } from "./GeometryCache";
 
 interface MeshLoaderProps {
   url: string;
+  format?: 'ply' | 'drc';
 }
 
-export default function PLYMeshLoader({ url }: MeshLoaderProps) {
+export default function MeshLoader({ url, format }: MeshLoaderProps) {
   const [geometry, setGeometry] = useState<BufferGeometry | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -44,11 +46,23 @@ export default function PLYMeshLoader({ url }: MeshLoaderProps) {
         }
 
         // Sinon, charger depuis le réseau
-        console.log('🌐 Chargement depuis le réseau:', url);
+        console.log('🌐 Chargement depuis le réseau:', url, `(${format})`);
         console.log('📊 Statistiques cache avant chargement:', geometryCache.getStats());
         setCacheStatus('network');
 
-        const loader = new PLYLoader();
+        let loader;
+        
+        // Créer le loader approprié selon le format
+        if (format === 'drc') {
+          console.log('🔧 Utilisation du DRACOLoader');
+          loader = new DRACOLoader();
+          // Specify path to a folder containing WASM/JS decoding libraries
+          loader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
+        } else {
+          console.log('🔧 Utilisation du PLYLoader');
+          loader = new PLYLoader();
+        }
+        
         loader.setCrossOrigin('anonymous');
 
         loader.load(
@@ -68,7 +82,7 @@ export default function PLYMeshLoader({ url }: MeshLoaderProps) {
             console.log('Chargement:', (progress.loaded / progress.total * 100) + '%');
           },
           (error) => {
-            console.error('Erreur lors du chargement du PLY:', error);
+            console.error(`Erreur lors du chargement du ${format?.toUpperCase()}:`, error);
             setError('Erreur lors du chargement du modèle');
             setLoading(false);
           }

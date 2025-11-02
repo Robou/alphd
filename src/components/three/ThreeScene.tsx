@@ -15,6 +15,7 @@ import MyLevaUI, { useSceneControls } from "./LevaUI";
 interface Model {
   name: string;
   url: string;
+  format?: 'ply' | 'drc';
   coordinates?: { x: number; y: number };
 }
 

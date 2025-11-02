@@ -2,11 +2,12 @@
 
 import React from "react";
 import { useMemo } from "react";
-import PLYMeshLoader from "./PLYMeshLoader";
+import MeshLoader from "./MeshLoader";
 
 interface Model {
   name: string;
   url: string;
+  format?: 'ply' | 'drc';
   coordinates?: { x: number; y: number };
 }
 
@@ -33,7 +34,7 @@ export default function ModelPositioner({ models, selectedModels }: ModelPositio
     <>
       {positionedModels.map((model) => (
         <group key={model.url} position={model.position} rotation={[-Math.PI / 2, 0, 0]}>
-          <PLYMeshLoader url={model.url} />
+          <MeshLoader url={model.url} format={model.format} />
         </group>
       ))}
     </>
