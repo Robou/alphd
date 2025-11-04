@@ -66,7 +66,8 @@ class GeometryCache {
       this.hits++;
       // Mettre à jour le timestamp d'accès
       entry.timestamp = Date.now();
-      return entry.geometry.clone();
+      // Retourner la géométrie directement (pas de clone pour éviter les fuites mémoire)
+      return entry.geometry;
     }
 
     this.misses++;

@@ -8,6 +8,7 @@ import { BufferGeometry, Material, Mesh } from "three";
 import * as THREE from "three";
 import BoundingBoxHelper from "./BoundingBoxHelper";
 import { geometryCache } from "./GeometryCache";
+import ModelOptimizer from "./ModelOptimizer";
 
 interface MeshLoaderProps {
   url: string;
@@ -18,8 +19,18 @@ export default function MeshLoader({ url, format }: MeshLoaderProps) {
   const [geometry, setGeometry] = useState<BufferGeometry | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [optimized, setOptimized] = useState(false);
   const [cacheStatus, setCacheStatus] = useState<'loading' | 'cache' | 'network'>('loading');
   const meshRef = useRef<Mesh>(null);
+
+useEffect(() => {
+    // Cleanup function pour éviter les fuites mémoire
+    return () => {
+      if (meshRef.current) {
+        meshRef.current.geometry?.dispose();
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!url) {
@@ -56,8 +67,9 @@ export default function MeshLoader({ url, format }: MeshLoaderProps) {
         if (format === 'drc') {
           console.log('🔧 Utilisation du DRACOLoader');
           loader = new DRACOLoader();
-          // Specify path to a folder containing WASM/JS decoding libraries
+          // Utiliser JavaScript au lieu de WASM pour éviter les problèmes mémoire
           loader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
+          loader.setDecoderConfig({ type: 'js' }); // Utiliser JavaScript au lieu de WASM
         } else {
           console.log('🔧 Utilisation du PLYLoader');
           loader = new PLYLoader();
@@ -72,10 +84,22 @@ export default function MeshLoader({ url, format }: MeshLoaderProps) {
             geometry.computeBoundingBox();
             geometry.computeVertexNormals();
 
-            // Stocker dans le cache pour les prochaines fois
-            geometryCache.set(url, geometry);
+            // Vérifier si la géométrie nécessite une optimisation
+            const perfInfo = ModelOptimizer.getPerformanceInfo(geometry);
+            console.log(`📊 Performance info for ${url}:`, perfInfo);
 
-            setGeometry(geometry);
+            // Optimiser si nécessaire
+            const optimizedGeometry = ModelOptimizer.optimizeIfNeeded(geometry);
+            const wasOptimized = optimizedGeometry !== geometry;
+            setOptimized(wasOptimized);
+            
+            const finalGeometry = ModelOptimizer.getPerformanceInfo(optimizedGeometry);
+            console.log(`✅ Final geometry info:`, finalGeometry);
+
+            // Stocker dans le cache pour les prochaines fois
+            geometryCache.set(url, optimizedGeometry);
+
+            setGeometry(optimizedGeometry);
             setLoading(false);
           },
           (progress) => {
@@ -83,7 +107,7 @@ export default function MeshLoader({ url, format }: MeshLoaderProps) {
           },
           (error) => {
             console.error(`Erreur lors du chargement du ${format?.toUpperCase()}:`, error);
-            setError('Erreur lors du chargement du modèle');
+            setError(`Erreur lors du chargement du modèle ${format?.toUpperCase()}`);
             setLoading(false);
           }
         );
@@ -135,11 +159,8 @@ export default function MeshLoader({ url, format }: MeshLoaderProps) {
   return (
     <group>
       <mesh ref={meshRef} geometry={geometry}>
-        <meshStandardMaterial
-          color={cacheStatus === 'cache' ? "#22c55e" : "#4a90e2"} // Vert pour cache, bleu pour réseau
+        <meshNormalMaterial
           side={THREE.DoubleSide}
-          roughness={0.5}
-          metalness={0.5}
         />
       </mesh>
 
@@ -156,6 +177,14 @@ export default function MeshLoader({ url, format }: MeshLoaderProps) {
         <mesh position={[0, 1.5, 0]}>
           <sphereGeometry args={[0.05, 8, 8]} />
           <meshBasicMaterial color="#22c55e" />
+        </mesh>
+      )}
+
+      {/* Indicateur pour les modèles optimisés */}
+      {optimized && (
+        <mesh position={[0, 1.2, 0]}>
+          <sphereGeometry args={[0.03, 8, 8]} />
+          <meshBasicMaterial color="#f59e0b" />
         </mesh>
       )}
     </group>
