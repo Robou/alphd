@@ -34,9 +34,9 @@ function SceneContent({ models, selectedModels }: ThreeSceneProps) {
         enablePan={true}
         enableZoom={true}
         enableRotate={true}
-        minDistance={0.5}
+        minDistance={0}
         maxDistance={50}
-        maxPolarAngle={Math.PI / 2}
+        maxPolarAngle={Math.PI}
         target={[0, 0, 0]}
       />
 
@@ -48,8 +48,8 @@ function SceneContent({ models, selectedModels }: ThreeSceneProps) {
       <ambientLight intensity={1.3} />
       <directionalLight
         position={[5, 5, 3]}
-        intensity={1.2}
-        castShadow
+        intensity={1.6}
+        castShadow={true}
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
         shadow-camera-far={20}
@@ -78,7 +78,7 @@ export default function ThreeScene({ models, selectedModels }: ThreeSceneProps) 
   return (
     <>
       <div className="relative w-full h-full">
-        <Canvas camera={{ position: [0, 3, 3], fov: 75}}>
+        <Canvas camera={{ position: [0, 3, 3], fov: 75, near: 0.001}}>
           <SceneContent models={models} selectedModels={selectedModels} />
         </Canvas>
 
