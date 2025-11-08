@@ -6,13 +6,14 @@ import { PLYLoader } from "three-stdlib";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { BufferGeometry, Material, Mesh } from "three";
 import * as THREE from "three";
+import { useSceneControls } from "./LevaUI";
 import BoundingBoxHelper from "./BoundingBoxHelper";
 import { geometryCache } from "./GeometryCache";
 import ModelOptimizer from "./ModelOptimizer";
 
 interface MeshLoaderProps {
   url: string;
-  format?: 'ply' | 'drc';
+  format?: "ply" | "drc";
 }
 
 export default function MeshLoader({ url, format }: MeshLoaderProps) {
@@ -20,10 +21,13 @@ export default function MeshLoader({ url, format }: MeshLoaderProps) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [optimized, setOptimized] = useState(false);
-  const [cacheStatus, setCacheStatus] = useState<'loading' | 'cache' | 'network'>('loading');
+  const [cacheStatus, setCacheStatus] = useState<
+    "loading" | "cache" | "network"
+  >("loading");
   const meshRef = useRef<Mesh>(null);
+  const controls = useSceneControls();
 
-useEffect(() => {
+  useEffect(() => {
     // Cleanup function pour éviter les fuites mémoire
     return () => {
       if (meshRef.current) {
@@ -35,7 +39,7 @@ useEffect(() => {
   useEffect(() => {
     if (!url) {
       setLoading(false);
-      setCacheStatus('loading');
+      setCacheStatus("loading");
       return;
     }
 
@@ -48,34 +52,39 @@ useEffect(() => {
         const cachedGeometry = geometryCache.get(url);
 
         if (cachedGeometry) {
-          console.log('✅ Géométrie chargée depuis le cache:', url);
-          console.log('📊 Statistiques cache:', geometryCache.getStats());
-          setCacheStatus('cache');
+          console.log("✅ Géométrie chargée depuis le cache:", url);
+          console.log("📊 Statistiques cache:", geometryCache.getStats());
+          setCacheStatus("cache");
           setGeometry(cachedGeometry);
           setLoading(false);
           return;
         }
 
         // Sinon, charger depuis le réseau
-        console.log('🌐 Chargement depuis le réseau:', url, `(${format})`);
-        console.log('📊 Statistiques cache avant chargement:', geometryCache.getStats());
-        setCacheStatus('network');
+        console.log("🌐 Chargement depuis le réseau:", url, `(${format})`);
+        console.log(
+          "📊 Statistiques cache avant chargement:",
+          geometryCache.getStats()
+        );
+        setCacheStatus("network");
 
         let loader;
-        
+
         // Créer le loader approprié selon le format
-        if (format === 'drc') {
-          console.log('🔧 Utilisation du DRACOLoader');
+        if (format === "drc") {
+          console.log("🔧 Utilisation du DRACOLoader");
           loader = new DRACOLoader();
           // Utiliser JavaScript au lieu de WASM pour éviter les problèmes mémoire
-          loader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
-          loader.setDecoderConfig({ type: 'js' }); // Utiliser JavaScript au lieu de WASM
+          loader.setDecoderPath(
+            "https://www.gstatic.com/draco/versioned/decoders/1.5.7/"
+          );
+          loader.setDecoderConfig({ type: "js" }); // Utiliser JavaScript au lieu de WASM
         } else {
-          console.log('🔧 Utilisation du PLYLoader');
+          console.log("🔧 Utilisation du PLYLoader");
           loader = new PLYLoader();
         }
-        
-        loader.setCrossOrigin('anonymous');
+
+        loader.setCrossOrigin("anonymous");
 
         loader.load(
           url,
@@ -92,8 +101,9 @@ useEffect(() => {
             const optimizedGeometry = ModelOptimizer.optimizeIfNeeded(geometry);
             const wasOptimized = optimizedGeometry !== geometry;
             setOptimized(wasOptimized);
-            
-            const finalGeometry = ModelOptimizer.getPerformanceInfo(optimizedGeometry);
+
+            const finalGeometry =
+              ModelOptimizer.getPerformanceInfo(optimizedGeometry);
             console.log(`✅ Final geometry info:`, finalGeometry);
 
             // Stocker dans le cache pour les prochaines fois
@@ -103,17 +113,25 @@ useEffect(() => {
             setLoading(false);
           },
           (progress) => {
-            console.log('Chargement:', (progress.loaded / progress.total * 100) + '%');
+            console.log(
+              "Chargement:",
+              (progress.loaded / progress.total) * 100 + "%"
+            );
           },
           (error) => {
-            console.error(`Erreur lors du chargement du ${format?.toUpperCase()}:`, error);
-            setError(`Erreur lors du chargement du modèle ${format?.toUpperCase()}`);
+            console.error(
+              `Erreur lors du chargement du ${format?.toUpperCase()}:`,
+              error
+            );
+            setError(
+              `Erreur lors du chargement du modèle ${format?.toUpperCase()}`
+            );
             setLoading(false);
           }
         );
       } catch (err) {
-        console.error('Erreur lors du chargement:', err);
-        setError('Erreur lors du chargement du modèle');
+        console.error("Erreur lors du chargement:", err);
+        setError("Erreur lors du chargement du modèle");
         setLoading(false);
       }
     };
@@ -123,7 +141,7 @@ useEffect(() => {
 
   if (loading) {
     // Couleur différente selon la source : vert pour cache, orange pour réseau
-    const loadingColor = cacheStatus === 'cache' ? "#00ff00" : "#ffaa00";
+    const loadingColor = cacheStatus === "cache" ? "#00ff00" : "#ffaa00";
 
     return (
       <group>
@@ -132,10 +150,17 @@ useEffect(() => {
           <meshStandardMaterial color={loadingColor} wireframe />
         </mesh>
         {/* Bounding box du cube de chargement */}
-        <BoundingBoxHelper
-          box={new THREE.Box3(new THREE.Vector3(-0.5, -0.5, -0.5), new THREE.Vector3(0.5, 0.5, 0.5))}
-          color={loadingColor}
-        />
+        {controls.showBoundingBoxes && (
+          <BoundingBoxHelper
+            box={
+              new THREE.Box3(
+                new THREE.Vector3(-0.5, -0.5, -0.5),
+                new THREE.Vector3(0.5, 0.5, 0.5)
+              )
+            }
+            color={loadingColor}
+          />
+        )}
       </group>
     );
   }
@@ -148,32 +173,54 @@ useEffect(() => {
           <meshStandardMaterial color="red" />
         </mesh>
         {/* Bounding box de la sphère d'erreur */}
-        <BoundingBoxHelper
-          box={new THREE.Box3(new THREE.Vector3(-0.5, -0.5, -0.5), new THREE.Vector3(0.5, 0.5, 0.5))}
-          color="#ff0000"
-        />
+
+        {controls.showBoundingBoxes && (
+          <BoundingBoxHelper
+            box={
+              new THREE.Box3(
+                new THREE.Vector3(-0.5, -0.5, -0.5),
+                new THREE.Vector3(0.5, 0.5, 0.5)
+              )
+            }
+            color="#ff0000"
+          />
+        )}
       </group>
     );
   }
 
   return (
     <group>
-      <mesh ref={meshRef} geometry={geometry}>
-        <meshNormalMaterial
-          side={THREE.DoubleSide}
-        />
+      <mesh ref={meshRef} geometry={geometry} castShadow receiveShadow>
+        {controls.material === "normal" && (
+          <meshNormalMaterial side={THREE.DoubleSide} />
+        )}
+        {controls.material === "standard" && (
+          <meshStandardMaterial
+            side={THREE.DoubleSide}
+            color={controls.meshColor}
+            roughness={controls.roughness}
+            metalness={controls.metalness}
+          />
+        )}
+        {controls.material === "phong" && (
+          <meshPhongMaterial side={THREE.DoubleSide} color="#ffffff" />
+        )}
+        {controls.material === "lambert" && (
+          <meshLambertMaterial side={THREE.DoubleSide} color="#ffffff" />
+        )}
       </mesh>
 
       {/* Bounding box du mesh chargé */}
-      {geometry.boundingBox && (
+      {controls.showBoundingBoxes && geometry.boundingBox && (
         <BoundingBoxHelper
           box={geometry.boundingBox}
-          color={cacheStatus === 'cache' ? "#16a34a" : "#ffff00"} // Vert foncé pour cache, jaune pour réseau
+          color={cacheStatus === "cache" ? "#16a34a" : "#ffff00"} // Vert foncé pour cache, jaune pour réseau
         />
       )}
 
       {/* Indicateur visuel subtil pour le cache */}
-      {cacheStatus === 'cache' && (
+      {cacheStatus === "cache" && (
         <mesh position={[0, 1.5, 0]}>
           <sphereGeometry args={[0.05, 8, 8]} />
           <meshBasicMaterial color="#22c55e" />
