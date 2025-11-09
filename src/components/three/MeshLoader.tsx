@@ -11,6 +11,8 @@ import BoundingBoxHelper from "./BoundingBoxHelper";
 import { geometryCache } from "./GeometryCache";
 import ModelOptimizer from "./ModelOptimizer";
 
+import SlopeMaterialImpl from "./SlopeMaterial";
+
 interface MeshLoaderProps {
   url: string;
   format?: "ply" | "drc";
@@ -203,11 +205,12 @@ export default function MeshLoader({ url, format }: MeshLoaderProps) {
             metalness={controls.metalness}
           />
         )}
-        {controls.material === "phong" && (
-          <meshPhongMaterial side={THREE.DoubleSide} color="#ffffff" />
-        )}
-        {controls.material === "lambert" && (
-          <meshLambertMaterial side={THREE.DoubleSide} color="#ffffff" />
+        {controls.material === "slope" && (
+          <primitive
+            object={new SlopeMaterialImpl()}
+            attach="material"
+            side={THREE.DoubleSide}
+          />
         )}
       </mesh>
 

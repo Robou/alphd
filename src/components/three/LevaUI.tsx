@@ -64,7 +64,7 @@ function Params() {
     meshColor: { value: "#fff", label: "Couleur du mesh" },
     material: {
       value: "standard",
-      options: ["standard", "normal",],
+      options: ["standard", "slope", "normal",],
       label: "Matériau",
     },
     roughness: { value: 0.5, min: 0, max: 1, step: 0.05, label: "Rugosité", render: (get) => get("Aspect.material") == "standard"},
