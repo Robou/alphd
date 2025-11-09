@@ -4,18 +4,21 @@ import * as THREE from "three";
 
 import React, { useEffect, useRef } from "react";
 
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useFrame } from "@react-three/fiber";
 import {
+  PerspectiveCamera,
   Stats,
   OrbitControls,
-  Environment,
   Clouds,
   Cloud,
+  Sky,
 } from "@react-three/drei";
 import ModelPositioner from "./ModelPositioner";
 import SceneUI from "./SceneUI";
 import MyLevaUI, { useSceneControls } from "./LevaUI";
-// import { random } from "maath"
+
+import JEASINGS from "jeasings";
+import JEasingsComponent from "./JEasings";
 
 interface Model {
   name: string;
@@ -29,9 +32,27 @@ interface ThreeSceneProps {
   selectedModels: string[];
 }
 
+function JEasings() {
+  useFrame(() => {
+    JEASINGS.update();
+  });
+}
+
 // Composant interne qui utilise les contrôles de scène
 function SceneContent({ models, selectedModels }: ThreeSceneProps) {
   const controls = useSceneControls();
+
+  //JEasing
+  const orbitControlsRef = useRef<any>(null);
+  const handleMeshDoubleClick = (event: any) => {
+    event.stopPropagation();
+    if (orbitControlsRef.current && event.point) {
+      new JEASINGS.JEasing(orbitControlsRef.current.target)
+        .to({ x: event.point.x, y: event.point.y, z: event.point.z }, 500)
+        .easing(JEASINGS.Cubic.Out)
+        .start();
+    }
+  };
 
   // Conversion sphérique → cartésien
   const getSunPosition = (
@@ -56,7 +77,15 @@ function SceneContent({ models, selectedModels }: ThreeSceneProps) {
 
   return (
     <>
+      <JEasingsComponent />
+      <PerspectiveCamera
+        makeDefault
+        position={[0, 5, 3]}
+        fov={controls.fov}
+        near={0.001}
+      />
       <OrbitControls
+        ref={orbitControlsRef}
         enablePan={true}
         enableZoom={true}
         enableRotate={true}
@@ -88,6 +117,14 @@ function SceneContent({ models, selectedModels }: ThreeSceneProps) {
           shadow-camera-bottom={-10}
         />
       )}
+
+      <Sky
+        distance={450000}
+        sunPosition={[0, 1, 0]}
+        inclination={0}
+        azimuth={0.25}
+      />
+
       <pointLight position={[-5, -5, -3]} intensity={0.5} />
       {/* <Environment preset="sunset" /> */}
       {/* Nuages contrôlés par Leva */}
@@ -106,7 +143,7 @@ function SceneContent({ models, selectedModels }: ThreeSceneProps) {
         </Clouds>
       )}
       {/* Positionneur automatique de modèles */}
-      <ModelPositioner models={models} selectedModels={selectedModels} />
+      <ModelPositioner models={models} selectedModels={selectedModels} onMeshDoubleClick={handleMeshDoubleClick}/>
     </>
   );
 }
@@ -116,15 +153,15 @@ export default function ThreeScene({
   selectedModels,
 }: ThreeSceneProps) {
   return (
-    <MyLevaUI>
-      <div className="relative w-full h-full">
-        <Canvas camera={{ position: [0, 5, 3], fov: 75, near: 0.001 }}>
+    <div className="relative w-full h-full">
+      <MyLevaUI>
+        <Canvas>
           <SceneContent models={models} selectedModels={selectedModels} />
         </Canvas>
 
         {/* Interface utilisateur overlay */}
         <SceneUI models={models} selectedModels={selectedModels} />
-      </div>
-    </MyLevaUI>
+      </MyLevaUI>
+    </div>
   );
 }

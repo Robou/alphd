@@ -6,19 +6,24 @@ export const SceneControlsContext = createContext<{
   nuages: boolean;
   showBoundingBoxes: boolean;
   material: string;
+  fov: number;
   [key: string]: any;
 }>({
   nuages: true,
   showBoundingBoxes: true,
-  material: "standard",
+  material: "normal",
+  fov: 75,
 });
 
 function Params() {
-  const debugControls = useControls("Debug", {
-    showGrid: { value: true, label: "Grille" },
-    showAxes: { value: false, label: "Axes" },
-    showBoundingBoxes: { value: false, label: "Boîtes englobantes" },
-    showStats: { value: false, label: "Statistiques" },
+  const cameraControls = useControls("Caméra", {
+    fov: {
+      value: 75,
+      min: 10,
+      max: 110,
+      step: 1,
+      label: "Largeur de champ",
+    },
   });
 
   const lightControls = useControls("Éclairages", {
@@ -61,39 +66,137 @@ function Params() {
   const aspectControls = useControls("Aspect", {
     nuages: { value: true, label: "Nuages" },
 
-    meshColor: { value: "#fff", label: "Couleur du mesh" },
     material: {
       value: "standard",
-      options: ["standard", "slope", "normal",],
+      options: ["standard", "slope", "normal"],
       label: "Matériau",
     },
-    roughness: { value: 0.5, min: 0, max: 1, step: 0.05, label: "Rugosité", render: (get) => get("Aspect.material") == "standard"},
-    metalness: { value: 0.5, min: 0, max: 1, step: 0.05, label: "Métallicité", render: (get) => get("Aspect.material") == "standard" },
+    meshColor: {
+      value: "#fff",
+      label: "Couleur du mesh",
+      render: (get) => get("Aspect.material") == "standard",
+    },
+    roughness: {
+      value: 0.5,
+      min: 0,
+      max: 1,
+      step: 0.05,
+      label: "Rugosité",
+      render: (get) => get("Aspect.material") == "standard",
+    },
+    metalness: {
+      value: 0.5,
+      min: 0,
+      max: 1,
+      step: 0.05,
+      label: "Métallicité",
+      render: (get) => get("Aspect.material") == "standard",
+    },
+    snowColor: {
+      value: "#f1fbff",
+      label: "Couleur neige",
+      render: (get) => get("Aspect.material") === "slope",
+    },
+    rockColor: {
+      value: "#9c725a",
+      label: "Couleur roche",
+      render: (get) => get("Aspect.material") === "slope",
+    },
+    slopeThreshold: {
+      value: 0.55,
+      min: 0,
+      max: 1,
+      step: 0.01,
+      label: "Seuil de pente",
+      render: (get) => get("Aspect.material") === "slope",
+    },
+    smoothness: {
+      value: 0.3,
+      min: 0,
+      max: 0.5,
+      step: 0.01,
+      label: "Douceur transition",
+      render: (get) => get("Aspect.material") === "slope",
+    },
   });
 
-  return { ...debugControls, ...lightControls, ...aspectControls };
+  const debugControls = useControls("Debug", {
+    showGrid: { value: true, label: "Grille" },
+    showAxes: { value: false, label: "Axes" },
+    showBoundingBoxes: { value: false, label: "Boîtes englobantes" },
+    showStats: { value: false, label: "Statistiques" },
+  });
+
+  return {
+    ...cameraControls,
+    ...debugControls,
+    ...lightControls,
+    ...aspectControls,
+  };
 }
+
+const matrixTheme = {
+  colors: {
+    elevation1: "rgba(0, 0, 0, 0.1)",
+    elevation2: "rgba(0, 0, 0, 0.2)",
+    elevation3: "rgba(0, 0, 0, 0.3)",
+    accent1: "#00ff00",
+    accent2: "#00dd00",
+    accent3: "#00bb00",
+    highlight1: "#00ff00",
+    highlight2: "#00ff00",
+    highlight3: "#00ff00",
+    vivid1: "#00ff00",
+  },
+  radii: {
+    xs: "2px",
+    sm: "3px",
+    lg: "10px",
+  },
+  space: {
+    sm: "3px",
+    md: "6px",
+    rowGap: "4px",
+    colGap: "7px",
+  },
+  fontSizes: {
+    root: "11px",
+  },
+};
 
 export default function MyLevaUI({ children }: { children: React.ReactNode }) {
   const controlsValue = Params();
 
   return (
     <>
-      <Leva
-        hideCopyButton={true}
-        flat={true}
-        collapsed={true}
-        titleBar={{
-          // Configure title bar options
-          title: "Paramètres", // Custom title
-          drag: true, // Enable dragging
-          filter: false, // Enable filter/search
-          position: { x: 0, y: 0 }, // Initial position (when drag is enabled)
-          onDrag: (position) => {}, // Callback when dragged
-        }}
-      />
-
       <SceneControlsContext.Provider value={controlsValue}>
+        <Leva
+          theme={matrixTheme}
+          hideCopyButton={true}
+          flat={true}
+          collapsed={true}
+          titleBar={{
+            // Configure title bar options
+            title: "Paramètres", // Custom title
+            drag: true, // Enable dragging
+            filter: false, // Enable filter/search
+            position: { x: 0, y: 0 }, // Initial position (when drag is enabled)
+            onDrag: (position) => {}, // Callback when dragged
+          }}
+        />
+
+        <style>{`
+        .leva-c-kWgxhW {
+          position: absolute !important;
+          top: 5px !important;
+          left: 5px !important;
+          right: auto !important;
+          max-height: calc(50vh - 20px) !important;
+          overflow-y: auto !important;
+          backdrop-filter: blur(10px);
+        }
+          
+      `}</style>
         {children}
         {/* Le contexte est maintenant disponible pour tous les composants enfants */}
       </SceneControlsContext.Provider>

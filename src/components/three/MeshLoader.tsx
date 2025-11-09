@@ -12,13 +12,19 @@ import { geometryCache } from "./GeometryCache";
 import ModelOptimizer from "./ModelOptimizer";
 
 import SlopeMaterialImpl from "./SlopeMaterial";
+import JEASINGS from "jeasings";
 
 interface MeshLoaderProps {
   url: string;
   format?: "ply" | "drc";
+  onDoubleClick?: (event: any) => void;
 }
 
-export default function MeshLoader({ url, format }: MeshLoaderProps) {
+export default function MeshLoader({
+  url,
+  format,
+  onDoubleClick,
+}: MeshLoaderProps) {
   const [geometry, setGeometry] = useState<BufferGeometry | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -210,9 +216,34 @@ export default function MeshLoader({ url, format }: MeshLoaderProps) {
             object={new SlopeMaterialImpl()}
             attach="material"
             side={THREE.DoubleSide}
+            snowColor={controls.snowColor}
+            rockColor={controls.rockColor}
+            slopeThreshold={controls.slopeThreshold}
+            smoothness={controls.smoothness}
           />
         )}
       </mesh>
+      {/* Mesh invisible simplifié pour les clics */}
+      {geometry.boundingBox && onDoubleClick && (
+        <mesh
+          onDoubleClick={onDoubleClick}
+          visible={false}
+          position={[
+            (geometry.boundingBox.max.x + geometry.boundingBox.min.x) / 2,
+            (geometry.boundingBox.max.y + geometry.boundingBox.min.y) / 2,
+            (geometry.boundingBox.max.z + geometry.boundingBox.min.z) / 2,
+          ]}
+        >
+          <boxGeometry
+            args={[
+              geometry.boundingBox.max.x - geometry.boundingBox.min.x,
+              geometry.boundingBox.max.y - geometry.boundingBox.min.y,
+              geometry.boundingBox.max.z - geometry.boundingBox.min.z,
+            ]}
+          />
+          <meshBasicMaterial transparent opacity={0} />
+        </mesh>
+      )}
 
       {/* Bounding box du mesh chargé */}
       {controls.showBoundingBoxes && geometry.boundingBox && (
